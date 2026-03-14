@@ -1,0 +1,8 @@
+# Traces to: operational repo hygiene for GitHub snapshotting
+
+.DS_Store
+.env.local
+.next/
+.claude/
+node_modules/
+tsconfig.tsbuildinfo
