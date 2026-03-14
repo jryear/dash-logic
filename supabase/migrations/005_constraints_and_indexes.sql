@@ -13,7 +13,7 @@ BEGIN
       CHECK (
         CASE
           WHEN event_type = 'created' AND COALESCE(payload->>'schema_version', '') = 'v1' THEN
-            extensions.jsonb_matches_schema(
+            jsonb_matches_schema(
               '{
                 "type": "object",
                 "required": ["schema_version", "sku", "partner_id", "description"],
@@ -24,11 +24,11 @@ BEGIN
                   "description": { "type": "string" }
                 },
                 "additionalProperties": true
-              }'::jsonb,
+              }'::json,
               payload
             )
           WHEN event_type = 'term_set' AND COALESCE(payload->>'schema_version', '') = 'v1' THEN
-            extensions.jsonb_matches_schema(
+            jsonb_matches_schema(
               '{
                 "type": "object",
                 "required": ["schema_version", "term_type", "value", "unit"],
@@ -39,11 +39,11 @@ BEGIN
                   "unit": { "type": "string" }
                 },
                 "additionalProperties": true
-              }'::jsonb,
+              }'::json,
               payload
             )
           WHEN event_type = 'quantity_committed' AND COALESCE(payload->>'schema_version', '') = 'v1' THEN
-            extensions.jsonb_matches_schema(
+            jsonb_matches_schema(
               '{
                 "type": "object",
                 "required": ["schema_version", "quantity", "unit", "sku", "unit_price", "currency", "due_date"],
@@ -57,11 +57,11 @@ BEGIN
                   "due_date": { "type": "string" }
                 },
                 "additionalProperties": true
-              }'::jsonb,
+              }'::json,
               payload
             )
           WHEN event_type = 'milestone_set' AND COALESCE(payload->>'schema_version', '') = 'v1' THEN
-            extensions.jsonb_matches_schema(
+            jsonb_matches_schema(
               '{
                 "type": "object",
                 "required": ["schema_version", "milestone_type", "date", "description"],
@@ -72,11 +72,11 @@ BEGIN
                   "description": { "type": "string" }
                 },
                 "additionalProperties": true
-              }'::jsonb,
+              }'::json,
               payload
             )
           WHEN event_type = 'status_updated' AND COALESCE(payload->>'schema_version', '') = 'v1' THEN
-            extensions.jsonb_matches_schema(
+            jsonb_matches_schema(
               '{
                 "type": "object",
                 "required": ["schema_version", "from_status", "to_status", "reason"],
@@ -87,11 +87,11 @@ BEGIN
                   "reason": { "type": "string" }
                 },
                 "additionalProperties": true
-              }'::jsonb,
+              }'::json,
               payload
             )
           WHEN event_type = 'amended' AND COALESCE(payload->>'schema_version', '') = 'v1' THEN
-            extensions.jsonb_matches_schema(
+            jsonb_matches_schema(
               '{
                 "type": "object",
                 "required": ["schema_version", "field", "old_value", "new_value", "reason"],
@@ -103,11 +103,11 @@ BEGIN
                   "reason": { "type": "string" }
                 },
                 "additionalProperties": true
-              }'::jsonb,
+              }'::json,
               payload
             )
           WHEN event_type = 'cancelled' AND COALESCE(payload->>'schema_version', '') = 'v1' THEN
-            extensions.jsonb_matches_schema(
+            jsonb_matches_schema(
               '{
                 "type": "object",
                 "required": ["schema_version", "reason", "cancellation_terms"],
@@ -117,11 +117,11 @@ BEGIN
                   "cancellation_terms": {}
                 },
                 "additionalProperties": true
-              }'::jsonb,
+              }'::json,
               payload
             )
           WHEN event_type = 'invoice_issued' AND COALESCE(payload->>'schema_version', '') = 'v1' THEN
-            extensions.jsonb_matches_schema(
+            jsonb_matches_schema(
               '{
                 "type": "object",
                 "required": ["schema_version", "invoice_number", "amount", "currency", "due_date", "line_items", "terms"],
@@ -135,11 +135,11 @@ BEGIN
                   "terms": {}
                 },
                 "additionalProperties": true
-              }'::jsonb,
+              }'::json,
               payload
             )
           WHEN event_type = 'payment_made' AND COALESCE(payload->>'schema_version', '') = 'v1' THEN
-            extensions.jsonb_matches_schema(
+            jsonb_matches_schema(
               '{
                 "type": "object",
                 "required": ["schema_version", "amount", "currency", "method", "reference_id"],
@@ -151,7 +151,7 @@ BEGIN
                   "reference_id": { "type": "string" }
                 },
                 "additionalProperties": true
-              }'::jsonb,
+              }'::json,
               payload
             )
           ELSE false
@@ -173,7 +173,7 @@ BEGIN
       CHECK (
         CASE
           WHEN event_type = 'shipped' AND COALESCE(payload->>'schema_version', '') = 'v1' THEN
-            extensions.jsonb_matches_schema(
+            jsonb_matches_schema(
               '{
                 "type": "object",
                 "required": ["schema_version", "quantity", "sku", "tracking_number", "carrier", "location"],
@@ -186,11 +186,11 @@ BEGIN
                   "location": { "type": "string" }
                 },
                 "additionalProperties": true
-              }'::jsonb,
+              }'::json,
               payload
             )
           WHEN event_type = 'received' AND COALESCE(payload->>'schema_version', '') = 'v1' THEN
-            extensions.jsonb_matches_schema(
+            jsonb_matches_schema(
               '{
                 "type": "object",
                 "required": ["schema_version", "quantity", "sku", "tracking_number", "carrier", "location"],
@@ -203,11 +203,11 @@ BEGIN
                   "location": { "type": "string" }
                 },
                 "additionalProperties": true
-              }'::jsonb,
+              }'::json,
               payload
             )
           WHEN event_type = 'delivered' AND COALESCE(payload->>'schema_version', '') = 'v1' THEN
-            extensions.jsonb_matches_schema(
+            jsonb_matches_schema(
               '{
                 "type": "object",
                 "required": ["schema_version", "quantity", "sku", "tracking_number", "carrier", "location"],
@@ -220,11 +220,11 @@ BEGIN
                   "location": { "type": "string" }
                 },
                 "additionalProperties": true
-              }'::jsonb,
+              }'::json,
               payload
             )
           WHEN event_type = 'partial_received' AND COALESCE(payload->>'schema_version', '') = 'v1' THEN
-            extensions.jsonb_matches_schema(
+            jsonb_matches_schema(
               '{
                 "type": "object",
                 "required": ["schema_version", "quantity", "sku", "tracking_number", "carrier", "location"],
@@ -237,11 +237,11 @@ BEGIN
                   "location": { "type": "string" }
                 },
                 "additionalProperties": true
-              }'::jsonb,
+              }'::json,
               payload
             )
           WHEN event_type = 'returned' AND COALESCE(payload->>'schema_version', '') = 'v1' THEN
-            extensions.jsonb_matches_schema(
+            jsonb_matches_schema(
               '{
                 "type": "object",
                 "required": ["schema_version", "quantity", "sku", "tracking_number", "carrier", "location"],
@@ -254,7 +254,7 @@ BEGIN
                   "location": { "type": "string" }
                 },
                 "additionalProperties": true
-              }'::jsonb,
+              }'::json,
               payload
             )
           ELSE false

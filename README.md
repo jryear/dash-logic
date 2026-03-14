@@ -408,7 +408,7 @@ Milestones are ordered by dependency, not by timeline. Each is independently tes
 
 **What ships:** The first half of the extraction pipeline — Classification, Entity Extraction, Entity Resolution. Inngest functions that take a raw artifact, classify its document type, extract provisional entities, and resolve them against existing partners/contacts/SKUs in the database. Processing jobs tracked in `processing_jobs` table.
 
-**Session context for agents:** Stage 1 uses Sonnet for classification (cheap, fast). Stage 2 uses Sonnet with structured output for entity extraction. Stage 3 is mostly database-driven (pg_trgm fuzzy matching, email domain matching) with Sonnet only for ambiguous cases. Every extraction carries the extractor provenance object from §7.3. Idempotency keys prevent duplicate processing.
+**Session context for agents:** Stage 1 uses Sonnet for classification (cheap, fast). Stage 2 uses Sonnet with structured output for entity extraction. Stage 3 is mostly database-driven (pg_trgm fuzzy matching, email domain matching) with Sonnet only for ambiguous cases. Every extraction carries the extractor provenance object from §7.3. Idempotency keys prevent duplicate processing. **Retry behavior:** `startProcessingJob` nullifies `idempotency_key` on any existing failed/pending job before inserting, so failed runs don't block retries via the unique constraint on `processing_jobs.idempotency_key`.
 
 **Tests & checks:**
 - Verify: A PO email classifies as `purchase_order`, a casual check-in as `check_in`

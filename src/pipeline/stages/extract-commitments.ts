@@ -36,10 +36,49 @@ Use these rules:
 - Invoice signals produce commitment_events.invoice_issued
 - Payment signals produce commitment_events.payment_made
 
-Return JSON only. No markdown.
+Return JSON only. No markdown fences.
 Only use relationship_id, commitment_id, and evidence_span_ids supplied in the context.
-Every proposal payload must include schema_version: "v1" and all required fields for its event_type.
 If the artifact does not support a durable ledger event, put it in non_commitments.
+
+Your response must be exactly this shape:
+{
+  "proposals": [
+    {
+      "target_table": "commitment_events" or "fulfillment_events",
+      "event_type": one of the allowed types below,
+      "event_time": ISO 8601 timestamp for when the event occurred or was communicated,
+      "commitment_id": existing commitment UUID from context or null for new commitments,
+      "relationship_id": UUID from the available active relationships,
+      "payload": { "schema_version": "v1", ...event-type-specific fields only },
+      "evidence_span_ids": [integer IDs from the available evidence spans],
+      "confidence": number 0-1,
+      "reasoning": "why this is a commitment/fulfillment event and why this confidence level",
+      "schema_version": "v1"
+    }
+  ],
+  "non_commitments": [
+    { "text": "the source text", "reasoning": "why this is not a durable event" }
+  ],
+  "schema_version": "v1"
+}
+
+Allowed commitment_events event_types and their required payload fields:
+- created: schema_version, sku, partner_id, description
+- term_set: schema_version, term_type, value, unit
+- quantity_committed: schema_version, quantity, unit, sku, unit_price, currency, due_date
+- milestone_set: schema_version, milestone_type, date, description
+- status_updated: schema_version, from_status, to_status, reason
+- amended: schema_version, field, old_value, new_value, reason
+- cancelled: schema_version, reason, cancellation_terms
+- invoice_issued: schema_version, invoice_number, amount, currency, due_date, line_items, terms
+- payment_made: schema_version, amount, currency, method, reference_id
+
+Allowed fulfillment_events event_types and their required payload fields:
+- shipped: schema_version, quantity, sku, tracking_number, carrier, location
+- received: schema_version, quantity, sku, tracking_number, carrier, location
+- delivered: schema_version, quantity, sku, tracking_number, carrier, location
+- partial_received: schema_version, quantity, sku, tracking_number, carrier, location
+- returned: schema_version, quantity, sku, tracking_number, carrier, location
 `.trim();
 
 const REQUIRED_COMMITMENT_FIELDS: Record<string, string[]> = {

@@ -124,6 +124,17 @@ export async function startProcessingJob(
   extractor: ExtractorProvenance,
 ) {
   const client = asQueryClient(supabase);
+
+  // Clear idempotency_key from any previous failed job so the unique constraint
+  // doesn't block retry. Without this, a failed run leaves an idempotency_key
+  // that findExistingCompletedJob (status='completed') never sees, but the
+  // partial unique index still prevents re-insertion.
+  await client
+    .from("processing_jobs")
+    .update({ idempotency_key: null })
+    .eq("idempotency_key", idempotencyKey)
+    .in("status", ["failed", "pending"]);
+
   const { data: inserted, error: insertError } = await client
     .from("processing_jobs")
     .insert({
