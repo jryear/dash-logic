@@ -4,9 +4,11 @@ import { NextResponse } from "next/server";
 
 import { runQueryPipeline } from "@/lib/query/pipeline";
 import { QueryRequestSchema } from "@/lib/query/types";
+import { ensureRuntimeInvariants } from "@/lib/runtime/invariants";
 
 export async function POST(request: Request) {
   try {
+    await ensureRuntimeInvariants();
     const body = QueryRequestSchema.parse(await request.json());
     const result = await runQueryPipeline(body.query);
 

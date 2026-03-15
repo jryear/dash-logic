@@ -1,0 +1,32 @@
+{
+  "git_sha": "7a2f8ce",
+  "model_versions": {
+    "query_decompose": "claude-sonnet-4-6",
+    "query_compose": "claude-opus-4-6"
+  },
+  "timestamp": "2026-03-15T20:48:26.502Z",
+  "dataset_tag": "seed-live",
+  "total_questions": 10,
+  "total_usable": 10,
+  "total_partial": 0,
+  "total_wrong": 0,
+  "trust_critical_count": 0,
+  "schema_valid_count": 10,
+  "gate_pass": true,
+  "top_failure_classes": [
+    {
+      "failure_class": "reconciliation",
+      "count": 2
+    },
+    {
+      "failure_class": "entity_resolution",
+      "count": 1
+    },
+    {
+      "failure_class": "comms_context",
+      "count": 1
+    }
+  ],
+  "canonical_6oz_usable": true,
+  "canonical_6oz_time_uncertainty_safe": true
+}

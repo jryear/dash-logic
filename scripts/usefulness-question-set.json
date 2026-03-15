@@ -1,0 +1,12 @@
+[
+  { "id": "q01", "question": "Where are my 6oz sample bottles?" },
+  { "id": "q02", "question": "What’s overdue with Pacific Packaging this week?" },
+  { "id": "q03", "question": "Show me any quantity mismatches right now." },
+  { "id": "q04", "question": "What invoices are at risk because shipping isn’t confirmed?" },
+  { "id": "q05", "question": "What changed since last update on PO #4412?" },
+  { "id": "q06", "question": "Which suppliers have gone silent >10 days?" },
+  { "id": "q07", "question": "Which commitments are likely to slip this week?" },
+  { "id": "q08", "question": "Show commitments with payment terms but no confirmed shipment." },
+  { "id": "q09", "question": "Which anomalies should Matt handle first this morning?" },
+  { "id": "q10", "question": "What evidence supports the biggest current discrepancy?" }
+]

@@ -14,6 +14,7 @@ const AllowedRpcSchema = z.enum([
   "get_evidence_for_claim",
   "search_evidence_text",
   "search_entities_fuzzy",
+  "resolve_po_number",
 ]);
 
 const QueryIntentSchema = z.enum([
@@ -51,6 +52,15 @@ export const QueryStepSchema = z.object({
   rpc: AllowedRpcSchema,
   args: z.record(z.unknown()),
   depends_on: z.array(z.string()).default([]),
+  required_from_dependency: z
+    .array(
+      z.object({
+        step_id: z.string().min(1),
+        field_path: z.string().min(1),
+        as: z.string().min(1),
+      }),
+    )
+    .default([]),
 });
 
 export const QueryPlanSchema = z
@@ -167,9 +177,11 @@ export const ExecutedStepSchema = z.object({
   step_id: z.string(),
   rpc: AllowedRpcSchema,
   args: z.record(z.unknown()),
-  status: z.enum(["completed", "skipped", "failed"]),
+  status: z.enum(["completed", "failed", "failed_dependency", "fanout_clamped"]),
   data: z.unknown().nullable(),
   error: z.string().nullable(),
+  missing_field_path: z.string().nullable().default(null),
+  upstream_step_id: z.string().nullable().default(null),
 });
 
 export const QueryExecutionResultSchema = z.object({

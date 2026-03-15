@@ -8,8 +8,8 @@ const EnvSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   SUPABASE_DB_URL: z.string().min(1),
   ANTHROPIC_API_KEY: z.string().min(1),
-  INNGEST_EVENT_KEY: z.string().min(1),
-  INNGEST_SIGNING_KEY: z.string().min(1),
+  INNGEST_EVENT_KEY: z.string().optional().default(""),
+  INNGEST_SIGNING_KEY: z.string().optional().default(""),
 });
 
 const parsedEnv = EnvSchema.safeParse({
