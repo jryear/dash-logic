@@ -21,7 +21,7 @@ import {
   startProcessingJob,
 } from "@/pipeline/utils";
 
-const SCORE_AND_EMIT_VERSION = "1.0.0";
+const SCORE_AND_EMIT_VERSION = "1.1.0";
 
 const REQUIRED_COMMITMENT_FIELDS: Record<string, string[]> = {
   created: ["schema_version", "sku", "partner_id", "description"],
@@ -49,6 +49,10 @@ type LedgerRecord = {
   seq: number;
   event_type: string;
   event_time: string;
+  event_time_source?: string;
+  event_time_confidence?: string;
+  event_time_reason?: string | null;
+  event_time_provenance?: Record<string, unknown>;
   relationship_id?: string;
   payload: Record<string, unknown>;
   idempotency_key: string;
@@ -72,6 +76,37 @@ function payloadHasRequiredFields(proposal: CommitmentProposal) {
 
 function countEvidenceCoverage(proposal: CommitmentProposal) {
   return proposal.evidence_span_ids.length;
+}
+
+function isPlaceholderEventTime(input: string) {
+  const normalized = new Date(input).toISOString();
+  return new Set([
+    "1970-01-01T00:00:00.000Z",
+    "2000-01-01T00:00:00.000Z",
+    "2024-01-01T00:00:00.000Z",
+  ]).has(normalized);
+}
+
+function hasEventTimeIntegrity(proposal: CommitmentProposal) {
+  if (Number.isNaN(Date.parse(proposal.event_time)) || isPlaceholderEventTime(proposal.event_time)) {
+    return false;
+  }
+
+  if (
+    proposal.event_time_source === "inferred_fallback" &&
+    (!proposal.event_time_reason || Object.keys(proposal.event_time_provenance ?? {}).length === 0)
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+function hasLegacyFulfillmentQuantityField(proposal: CommitmentProposal) {
+  return (
+    proposal.target_table === "fulfillment_events" &&
+    Object.prototype.hasOwnProperty.call(proposal.payload, "quantity_received")
+  );
 }
 
 function isInferenceProposal(proposal: CommitmentProposal) {
@@ -176,6 +211,10 @@ async function insertLedgerRow(
     seq,
     event_type: proposal.event_type,
     event_time: proposal.event_time,
+    event_time_source: proposal.event_time_source,
+    event_time_confidence: proposal.event_time_confidence,
+    event_time_reason: proposal.event_time_reason,
+    event_time_provenance: proposal.event_time_provenance as Json,
     payload: proposal.payload as Json,
     evidence_span_ids: proposal.evidence_span_ids,
     extractor: extractor as unknown as Json,
@@ -296,7 +335,12 @@ export async function runScoreAndEmitStage(
     const candidateOnly: CommitmentProposal[] = [];
 
     for (const proposal of payload.commitments.proposals) {
-      if (!payloadHasRequiredFields(proposal) || countEvidenceCoverage(proposal) === 0) {
+      if (
+        !payloadHasRequiredFields(proposal) ||
+        countEvidenceCoverage(proposal) === 0 ||
+        !hasEventTimeIntegrity(proposal) ||
+        hasLegacyFulfillmentQuantityField(proposal)
+      ) {
         candidateOnly.push(proposal);
         continue;
       }

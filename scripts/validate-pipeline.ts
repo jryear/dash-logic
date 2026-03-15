@@ -134,7 +134,7 @@ async function main() {
   for (const rec of stage56.written.records) {
     const { data, error } = await dashClient
       .from(rec.target_table)
-      .select("event_id,commitment_id,seq,event_type,event_time,confidence,epistemic_class,payload,idempotency_key")
+      .select("event_id,commitment_id,seq,event_type,event_time,event_time_source,event_time_confidence,event_time_reason,event_time_provenance,confidence,epistemic_class,payload,idempotency_key")
       .eq("event_id", rec.event_id)
       .single();
 
@@ -149,6 +149,10 @@ async function main() {
     console.log(`    seq: ${row.seq}`);
     console.log(`    event_type: ${row.event_type}`);
     console.log(`    event_time: ${row.event_time}`);
+    console.log(`    event_time_source: ${row.event_time_source}`);
+    console.log(`    event_time_confidence: ${row.event_time_confidence}`);
+    console.log(`    event_time_reason: ${row.event_time_reason}`);
+    console.log(`    event_time_provenance: ${JSON.stringify(row.event_time_provenance)}`);
     console.log(`    confidence: ${row.confidence}`);
     console.log(`    epistemic_class: ${row.epistemic_class}`);
     console.log(`    idempotency_key: ${row.idempotency_key}`);

@@ -154,6 +154,10 @@ export const CommitmentProposalSchema = z
     commitment_id: z.string().uuid().nullable(),
     event_type: z.string(),
     event_time: z.string(),
+    event_time_source: z.enum(["extracted", "artifact_metadata", "inferred_fallback"]),
+    event_time_confidence: z.enum(["high", "medium", "low"]),
+    event_time_reason: z.string().nullable().default(null),
+    event_time_provenance: z.record(z.unknown()).default({}),
     relationship_id: z.string().uuid(),
     payload: z.record(z.unknown()),
     evidence_span_ids: z.array(z.number().int().positive()),
@@ -184,6 +188,18 @@ export const CommitmentProposalSchema = z
         code: z.ZodIssueCode.custom,
         message: "payload.schema_version must be v1",
         path: ["payload", "schema_version"],
+      });
+    }
+
+    if (
+      proposal.event_time_source === "inferred_fallback" &&
+      (!proposal.event_time_reason ||
+        Object.keys(proposal.event_time_provenance ?? {}).length === 0)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Fallback event_time values require reason and provenance.",
+        path: ["event_time_source"],
       });
     }
   });

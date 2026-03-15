@@ -103,4 +103,48 @@ export interface Database {
       };
     };
   };
+  dash_private: {
+    Tables: {
+      commitment_events: {
+        Row: {
+          event_id: number;
+          commitment_id: string;
+          seq: number;
+          event_type: string;
+          event_time: string;
+          recorded_at: string;
+          relationship_id: string;
+          payload: Json;
+          evidence_span_ids: number[];
+          extractor: Json;
+          confidence: number | null;
+          epistemic_class: string;
+          idempotency_key: string;
+          event_time_source: "extracted" | "artifact_metadata" | "inferred_fallback";
+          event_time_confidence: "high" | "medium" | "low";
+          event_time_reason: string | null;
+          event_time_provenance: Json;
+        };
+      };
+      fulfillment_events: {
+        Row: {
+          event_id: number;
+          commitment_id: string;
+          seq: number;
+          event_type: string;
+          event_time: string;
+          recorded_at: string;
+          payload: Json;
+          evidence_span_ids: number[];
+          extractor: Json;
+          confidence: number | null;
+          idempotency_key: string;
+          event_time_source: "extracted" | "artifact_metadata" | "inferred_fallback";
+          event_time_confidence: "high" | "medium" | "low";
+          event_time_reason: string | null;
+          event_time_provenance: Json;
+        };
+      };
+    };
+  };
 }

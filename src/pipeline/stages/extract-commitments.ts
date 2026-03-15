@@ -21,7 +21,7 @@ import {
   startProcessingJob,
 } from "@/pipeline/utils";
 
-const EXTRACT_COMMITMENTS_VERSION = "1.0.0";
+const EXTRACT_COMMITMENTS_VERSION = "1.1.0";
 
 const EXTRACT_COMMITMENTS_SYSTEM_PROMPT = `
 You convert resolved supplier artifact context into ledger event proposals for Dash.
@@ -47,6 +47,10 @@ Your response must be exactly this shape:
       "target_table": "commitment_events" or "fulfillment_events",
       "event_type": one of the allowed types below,
       "event_time": ISO 8601 timestamp for when the event occurred or was communicated,
+      "event_time_source": "extracted", "artifact_metadata", or "inferred_fallback",
+      "event_time_confidence": "high", "medium", or "low",
+      "event_time_reason": null or a short explanation, required when source is inferred_fallback,
+      "event_time_provenance": object describing where the timestamp came from, required when source is inferred_fallback,
       "commitment_id": existing commitment UUID from context or null for new commitments,
       "relationship_id": UUID from the available active relationships,
       "payload": { "schema_version": "v1", ...event-type-specific fields only },
@@ -79,6 +83,17 @@ Allowed fulfillment_events event_types and their required payload fields:
 - delivered: schema_version, quantity, sku, tracking_number, carrier, location
 - partial_received: schema_version, quantity, sku, tracking_number, carrier, location
 - returned: schema_version, quantity, sku, tracking_number, carrier, location
+
+Known invalid event_time placeholders that must never be emitted:
+- 1970-01-01T00:00:00Z
+- 2000-01-01T00:00:00Z
+- 2024-01-01T00:00:00Z
+
+If the artifact text contains the time directly, use event_time_source = "extracted".
+If the best available timestamp comes from artifact metadata like captured_at or communication_date, use event_time_source = "artifact_metadata".
+Use event_time_source = "inferred_fallback" only when no better timestamp exists, and when you do, you must provide both event_time_reason and event_time_provenance.
+
+Never use payload.quantity_received. Fulfillment payloads must use payload.quantity only.
 `.trim();
 
 const REQUIRED_COMMITMENT_FIELDS: Record<string, string[]> = {
@@ -137,6 +152,22 @@ function isValidEventTime(input: string) {
   return !Number.isNaN(Date.parse(input));
 }
 
+function isPlaceholderEventTime(input: string) {
+  const normalized = new Date(input).toISOString();
+  return new Set([
+    "1970-01-01T00:00:00.000Z",
+    "2000-01-01T00:00:00.000Z",
+    "2024-01-01T00:00:00.000Z",
+  ]).has(normalized);
+}
+
+function hasLegacyFulfillmentQuantityField(proposal: CommitmentProposal) {
+  return (
+    proposal.target_table === "fulfillment_events" &&
+    Object.prototype.hasOwnProperty.call(proposal.payload, "quantity_received")
+  );
+}
+
 function sanitizeProposals(
   raw: CommitmentExtractionResult,
   validEvidenceIds: Set<number>,
@@ -151,15 +182,32 @@ function sanitizeProposals(
     const badRelationship = !validRelationshipIds.has(proposal.relationship_id);
     const badCommitment =
       proposal.commitment_id !== null && !validCommitmentIds.has(proposal.commitment_id);
+    const placeholderTime = isValidEventTime(proposal.event_time) && isPlaceholderEventTime(proposal.event_time);
+    const badFallback =
+      proposal.event_time_source === "inferred_fallback" &&
+      (!proposal.event_time_reason || Object.keys(proposal.event_time_provenance ?? {}).length === 0);
+    const legacyQuantityField = hasLegacyFulfillmentQuantityField(proposal);
 
-    if (!isValidEventTime(proposal.event_time) || badEvidence || badRelationship || badCommitment || !hasRequiredPayloadFields(proposal)) {
+    if (
+      !isValidEventTime(proposal.event_time) ||
+      placeholderTime ||
+      badEvidence ||
+      badRelationship ||
+      badCommitment ||
+      badFallback ||
+      legacyQuantityField ||
+      !hasRequiredPayloadFields(proposal)
+    ) {
       nonCommitments.push({
         text: stableStringify(proposal),
         reasoning: [
           !isValidEventTime(proposal.event_time) ? "Invalid event_time." : null,
+          placeholderTime ? "Known placeholder event_time rejected." : null,
           badEvidence ? "Proposal referenced evidence_span_ids outside the artifact context." : null,
           badRelationship ? "Proposal referenced an unknown relationship_id." : null,
           badCommitment ? "Proposal referenced an unknown commitment_id." : null,
+          badFallback ? "Fallback event_time requires reason and provenance." : null,
+          legacyQuantityField ? "Legacy quantity_received field is not allowed; use quantity." : null,
           !hasRequiredPayloadFields(proposal) ? "Proposal payload missed required D-002 fields." : null,
         ]
           .filter(Boolean)
